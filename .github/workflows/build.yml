@@ -1,0 +1,32 @@
+name: Build Plugin
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Zip'i ac
+        run: |
+          ZIP=$(find . -maxdepth 2 -name "*.zip" | head -n 1)
+          echo "Zip: $ZIP"
+          mkdir -p /tmp/src
+          unzip -q "$ZIP" -d /tmp/src
+          POM=$(find /tmp/src -name pom.xml | head -n 1)
+          echo "PROJECT_DIR=$(dirname "$POM")" >> $GITHUB_ENV
+
+      - name: Derle
+        run: mvn -B -f "$PROJECT_DIR/pom.xml" package
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LexesLawFight-plugin
+          path: ${{ env.PROJECT_DIR }}/target/*.jar
